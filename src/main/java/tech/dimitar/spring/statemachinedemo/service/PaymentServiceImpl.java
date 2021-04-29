@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
+import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.statemachine.support.DefaultStateMachineContext;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import tech.dimitar.spring.statemachinedemo.exception.NotFoundException;
 import tech.dimitar.spring.statemachinedemo.repository.PaymentRepository;
 
 import javax.transaction.Transactional;
+import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -37,7 +39,7 @@ public class PaymentServiceImpl implements PaymentService {
     public StateMachine<PaymentState, PaymentEvent> preAuth(UUID paymentId) {
         final StateMachine<PaymentState, PaymentEvent> sm = build(paymentId);
 
-        sendEvent(paymentId, sm, PaymentEvent.PRE_AUTH_APPROVED);
+        sendEvent(paymentId, sm, PaymentEvent.PRE_AUTHORIZE);
 
         return sm;
     }
@@ -47,10 +49,11 @@ public class PaymentServiceImpl implements PaymentService {
     public StateMachine<PaymentState, PaymentEvent> authorizePayment(UUID paymentId) {
         final StateMachine<PaymentState, PaymentEvent> sm = build(paymentId);
 
-        sendEvent(paymentId, sm, PaymentEvent.AUTHORIZE_APPROVED);
+        sendEvent(paymentId, sm, PaymentEvent.AUTHORIZE);
         return sm;
     }
 
+    @Deprecated // ste machine does this
     @Transactional
     @Override
     public StateMachine<PaymentState, PaymentEvent> declinePayment(UUID paymentId) {
@@ -84,4 +87,5 @@ public class PaymentServiceImpl implements PaymentService {
 
         sm.sendEvent(message);
     }
+
 }

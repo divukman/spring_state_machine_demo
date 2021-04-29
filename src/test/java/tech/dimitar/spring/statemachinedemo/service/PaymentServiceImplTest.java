@@ -1,6 +1,7 @@
 package tech.dimitar.spring.statemachinedemo.service;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -42,7 +43,23 @@ class PaymentServiceImplTest {
         paymentRepository.findById(savedPayment.getId())
                 .ifPresent(persistedPayment -> {
                     System.out.println(persistedPayment);
-                    assertEquals(persistedPayment.getPaymentState(), PaymentState.PRE_AUTH);
+                    System.out.println(persistedPayment.getPaymentState());
                 });
+    }
+
+    @Test
+    @RepeatedTest(10)
+    void auth() {
+        final Payment savedPayment = paymentService.newPayment(payment);
+
+        paymentService.preAuth(savedPayment.getId());
+
+        paymentRepository.findById(savedPayment.getId())
+                .ifPresent(persistedPayment -> {
+                    if (persistedPayment.getPaymentState() == PaymentState.PRE_AUTH) {
+                        paymentService.authorizePayment(persistedPayment.getId());
+                    }
+                });
+
     }
 }
