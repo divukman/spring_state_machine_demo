@@ -13,6 +13,7 @@ import tech.dimitar.spring.statemachinedemo.domain.PaymentState;
 import tech.dimitar.spring.statemachinedemo.exception.NotFoundException;
 import tech.dimitar.spring.statemachinedemo.repository.PaymentRepository;
 
+import javax.transaction.Transactional;
 import java.util.UUID;
 
 @Service
@@ -24,36 +25,40 @@ public class PaymentServiceImpl implements PaymentService {
     private final StateMachineFactory<PaymentState, PaymentEvent> stateMachineFactory;
     private final PaymentStateChangeInterceptor paymentStateChangeInterceptor;
 
+    @Transactional
     @Override
     public Payment newPayment(Payment payment) {
         payment.setPaymentState(PaymentState.NEW);
         return paymentRepository.save(payment);
     }
 
+    @Transactional
     @Override
     public StateMachine<PaymentState, PaymentEvent> preAuth(UUID paymentId) {
         final StateMachine<PaymentState, PaymentEvent> sm = build(paymentId);
 
-        sendEvent(paymentId, sm, PaymentEvent.PRE_AUTHORIZE);
+        sendEvent(paymentId, sm, PaymentEvent.PRE_AUTH_APPROVED);
 
-        return null;
+        return sm;
     }
 
+    @Transactional
     @Override
     public StateMachine<PaymentState, PaymentEvent> authorizePayment(UUID paymentId) {
         final StateMachine<PaymentState, PaymentEvent> sm = build(paymentId);
 
         sendEvent(paymentId, sm, PaymentEvent.AUTHORIZE_APPROVED);
-        return null;
+        return sm;
     }
 
+    @Transactional
     @Override
     public StateMachine<PaymentState, PaymentEvent> declinePayment(UUID paymentId) {
         final StateMachine<PaymentState, PaymentEvent> sm = build(paymentId);
 
         sendEvent(paymentId, sm, PaymentEvent.AUTHORIZE_DECLINED);
 
-        return null;
+        return sm;
     }
 
     private StateMachine<PaymentState, PaymentEvent> build (final UUID paymentId) {
